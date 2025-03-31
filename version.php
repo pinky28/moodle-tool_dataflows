@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2024101001;
+$plugin->version = 2025033100;
 $plugin->release = 2024101001;
 $plugin->requires = 2022112800;    // Our lowest supported Moodle (3.3.0).
 $plugin->supported = [400, 402];

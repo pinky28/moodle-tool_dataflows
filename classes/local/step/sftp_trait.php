@@ -80,6 +80,11 @@ trait sftp_trait {
                 'target' => ['type' => PARAM_TEXT, 'required' => true],
             ]);
         }
+        if ($behaviour === 'delete') {
+            $fields = array_merge($fields, [
+                'source' => ['type' => PARAM_TEXT, 'required' => true],
+            ]);
+        }
 
         return $fields;
     }
@@ -129,6 +134,16 @@ trait sftp_trait {
                     'pre',
                     get_string('connector_sftp:path_example', 'tool_dataflows'). get_string('path_help_examples', 'tool_dataflows')
                 )
+            );
+        }
+        if ($behaviour === 'delete') {
+            $mform->addElement('text', 'config_source', get_string('connector_sftp:source', 'tool_dataflows'));
+            $mform->addElement('static', 'config_source_desc', '',  get_string('connector_sftp:source_desc', 'tool_dataflows').
+                    \html_writer::nonempty_tag(
+                            'pre',
+                            get_string('connector_sftp:path_example', 'tool_dataflows').
+                            get_string('path_help_examples', 'tool_dataflows')
+                    )
             );
         }
     }
@@ -190,19 +205,42 @@ trait sftp_trait {
                 );
             }
         }
+        // Delete step checks.
+        if ($behaviour === 'delete') {
+            if (empty($config->source)) {
+                $errors['config_source'] = get_string(
+                        'config_field_missing',
+                        'tool_dataflows',
+                        get_string('connector_sftp:source', 'tool_dataflows'),
+                        true
+                );
+            }
+        }
 
         $hasremote = true;
         // Check that at least one file config has an sftp:// scheme.
-        if (!empty($config->source) && !empty($config->target)) {
-            // Check if the source or target is an expression, and evaluate it if required.
-            $sourceremote = helper::path_has_scheme($config->source, self::$sftpprefix);
-            $targetremote = helper::path_has_scheme($config->target, self::$sftpprefix);
-            $hasremote = $sourceremote || $targetremote;
-        }
-        if (!$hasremote) {
-            $errormsg = get_string('connector_sftp:missing_remote', 'tool_dataflows', null, true);
-            $errors['config_source'] = $errors['config_source'] ?? $errormsg;
-            $errors['config_target'] = $errors['config_target'] ?? $errormsg;
+        if ($behaviour === 'delete') {
+            if (!empty($config->source)) {
+                // Check if the source or target is an expression, and evaluate it if required.
+                $sourceremote = helper::path_has_scheme($config->source, self::$sftpprefix);
+                $hasremote = $sourceremote;
+            }
+            if (!$hasremote) {
+                $errormsg = get_string('connector_sftp:missing_remote', 'tool_dataflows', null, true);
+                $errors['config_source'] = $errors['config_source'] ?? $errormsg;
+            }
+        } else {
+            if (!empty($config->source) && !empty($config->target)) {
+                // Check if the source or target is an expression, and evaluate it if required.
+                $sourceremote = helper::path_has_scheme($config->source, self::$sftpprefix);
+                $targetremote = helper::path_has_scheme($config->target, self::$sftpprefix);
+                $hasremote = $sourceremote || $targetremote;
+            }
+            if (!$hasremote) {
+                $errormsg = get_string('connector_sftp:missing_remote', 'tool_dataflows', null, true);
+                $errors['config_source'] = $errors['config_source'] ?? $errormsg;
+                $errors['config_target'] = $errors['config_target'] ?? $errormsg;
+            }
         }
 
         return empty($errors) ? true : $errors;
@@ -228,6 +266,12 @@ trait sftp_trait {
             $error = helper::path_validate($config->target);
             if ($error !== true) {
                 $errors['config_target'] = $error;
+            }
+        }
+        if ($behaviour === 'delete') {
+            $error = helper::path_validate($config->source);
+            if ($error !== true) {
+                $errors['config_source'] = $error;
             }
         }
         if (!empty($config->privkeyfile)) {
@@ -397,6 +441,19 @@ trait sftp_trait {
         $tmppath = $this->enginestep->engine->create_temporary_file();
         $this->download($sftp, $sourcepath, $tmppath);
         $this->upload($sftp, $tmppath, $targetpath);
+    }
+
+    /**
+     * Delete a file from one remote source
+     *
+     * @param SFTP $sftp
+     * @param string $sourcepath
+     */
+    private function delete_from_remote(SFTP $sftp, string $sourcepath) {
+        $this->log("Deleting from '$sourcepath'");
+        if (!$sftp->delete($sourcepath, false)) {
+            throw new \moodle_exception('connector_sftp:delete_fail', 'tool_dataflows', '', $sftp->getLastSFTPError());
+        }
     }
 
     /**
