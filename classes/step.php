@@ -57,6 +57,9 @@ class step extends persistent {
     /** @var array array for lazy loading step dependants */
     private $dependents = null;
 
+    /** @var dataflow Dataflow */
+    protected $dataflow = null;
+
     /**
      * Return the definition of the properties of this model.
      *
