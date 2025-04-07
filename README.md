@@ -13,6 +13,7 @@
     - [local_webhooks](#local_webhooks)
   - [Installation](#installation)
     - [Dependencies](#dependencies)
+  - [Documentation](#documentation)
   - [Configuration](#configuration)
     - [Best practices for workflows](#best-practices-for-workflows)
   - [Guides](#guides)
@@ -79,6 +80,16 @@ apt install graphviz
 ```
 
 https://graphviz.org/documentation/
+
+## Documentation
+
+The following files contain some documentation to help you understand how dataflows work.
+
+* [Anatomy of a dataflow](./docs/anatomy_of_a_dataflow.md)
+* [Anatomy of a step](./docs/anatomy_of_a_step.md)
+* [How variables work](./docs/variables.md)
+* [Creating a new step type](./docs/creating_a_new_step_type.md)
+
 
 ## Configuration
 
