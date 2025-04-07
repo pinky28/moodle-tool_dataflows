@@ -130,14 +130,31 @@ class trigger_event extends trigger_step {
      * @return array
      */
     private function get_events_list() {
+        global $CFG;
+
         $eventlist = \tool_monitor\eventlist::get_all_eventlist();
         $pluginlist = \tool_monitor\eventlist::get_plugin_list($eventlist);
         $plugineventlist = [];
-        foreach ($pluginlist as $plugin => $pluginname) {
-            foreach ($eventlist[$plugin] as $event => $eventname) {
-                // Filter out events which cannot be triggered for some reason.
-                if (!$event::is_deprecated()) {
-                    $plugineventlist[$event] = "{$pluginname}: {$eventname}";
+
+        // Check for the version where this structure was changed.
+        if ($CFG->version >= 2023062300) {
+            foreach ($pluginlist as $plugintype => $plugins) {
+                foreach ($plugins as $plugin => $pluginname) {
+                    foreach ($eventlist[$plugin] as $event => $eventname) {
+                        // Filter out events which cannot be triggered for some reason.
+                        if (!$event::is_deprecated()) {
+                            $plugineventlist[$event] = "{$pluginname}: {$eventname}";
+                        }
+                    }
+                }
+            }
+        } else {
+            foreach ($pluginlist as $plugin => $pluginname) {
+                foreach ($eventlist[$plugin] as $event => $eventname) {
+                    // Filter out events which cannot be triggered for some reason.
+                    if (!$event::is_deprecated()) {
+                        $plugineventlist[$event] = "{$pluginname}: {$eventname}";
+                    }
                 }
             }
         }
