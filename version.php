@@ -31,5 +31,5 @@ $plugin->requires = 2022112800;    // Our lowest supported Moodle (3.3.0).
 $plugin->supported = [400, 404];
 // TODO $plugin->incompatible = ;  // Available as of Moodle 3.9.0 or later.
 $plugin->component = 'tool_dataflows';
-$plugin->maturity = MATURITY_ALPHA;
+$plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = [];
