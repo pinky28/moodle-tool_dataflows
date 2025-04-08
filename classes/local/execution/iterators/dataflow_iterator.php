@@ -18,6 +18,7 @@ namespace tool_dataflows\local\execution\iterators;
 
 use tool_dataflows\local\execution\flow_engine_step;
 use tool_dataflows\local\step\base_step;
+use tool_dataflows\local\variables\var_step;
 
 /**
  * A mapping iterator that takes a PHP iterator as a source.
@@ -45,8 +46,14 @@ class dataflow_iterator implements iterator {
     /** @var mixed */
     protected $value = null;
 
+    /** @var var_step  */
+    protected $stepvars;
+
     /** @var int */
     protected $iterationcount = 0;
+
+    /** @var bool */
+    protected $pulled;
 
     /**
      * Create an instance of this class.
