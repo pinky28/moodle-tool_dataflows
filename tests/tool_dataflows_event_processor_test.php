@@ -35,6 +35,12 @@ require_once(dirname(__FILE__) . '/../lib.php');
  */
 class tool_dataflows_event_processor_test extends \advanced_testcase {
 
+    /** @var \stdClass  */
+    private $course;
+    /** @var string */
+    private $outputpath;
+    /** @var step */
+
     /**
      * Set up before each test
      */
@@ -421,9 +427,6 @@ class tool_dataflows_event_processor_test extends \advanced_testcase {
         ]);
         $writer->depends_on([$reader]);
         $dataflow->add_step($writer);
-
-        $this->reader = $reader;
-        $this->writer = $writer;
 
         return $dataflow;
     }
