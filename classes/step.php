@@ -60,7 +60,7 @@ class step extends persistent {
     /** @var dataflow */
     private $dataflow = null;
 
-    /** @var steptype */
+    /** @var base_step */
     private $steptype = null;
 
     /**
