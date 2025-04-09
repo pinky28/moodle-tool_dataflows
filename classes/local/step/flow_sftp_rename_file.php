@@ -24,6 +24,6 @@ namespace tool_dataflows\local\step;
  * @copyright 2025, Catalyst IT
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class connector_sftp_delete_file extends connector_sftp {
-    use sftp_delete_file_trait;
+class flow_sftp_rename_file extends flow_sftp {
+    use sftp_rename_file_trait;
 }

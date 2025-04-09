@@ -74,7 +74,7 @@ trait sftp_trait {
             'privkeyfile' => ['type' => PARAM_TEXT],
         ];
 
-        if ($behaviour === 'copy') {
+        if ($behaviour === 'copy' || $behaviour === 'rename') {
             $fields = array_merge($fields, [
                 'source' => ['type' => PARAM_TEXT, 'required' => true],
                 'target' => ['type' => PARAM_TEXT, 'required' => true],
@@ -119,7 +119,7 @@ trait sftp_trait {
     public function form_add_custom_inputs(\MoodleQuickForm &$mform, $behaviour = 'copy') {
         $this->form_add_core_inputs($mform);
 
-        if ($behaviour === 'copy') {
+        if ($behaviour === 'copy' || $behaviour === 'rename') {
             $mform->addElement('text', 'config_source', get_string('connector_sftp:source', 'tool_dataflows'));
             $mform->addElement('static', 'config_source_desc', '',  get_string('connector_sftp:source_desc', 'tool_dataflows').
                 \html_writer::nonempty_tag(
@@ -137,12 +137,12 @@ trait sftp_trait {
             );
         }
         if ($behaviour === 'delete') {
-            $mform->addElement('text', 'config_source', get_string('connector_sftp:source', 'tool_dataflows'));
-            $mform->addElement('static', 'config_source_desc', '',  get_string('connector_sftp:source_desc', 'tool_dataflows').
+            $mform->addElement('text', 'config_source', get_string('connector_sftp:source_delete', 'tool_dataflows'));
+            $mform->addElement('static', 'config_source_desc', '',
+                    get_string('connector_sftp:source_delete_desc', 'tool_dataflows').
                     \html_writer::nonempty_tag(
                             'pre',
-                            get_string('connector_sftp:path_example', 'tool_dataflows').
-                            get_string('path_help_examples', 'tool_dataflows')
+                            get_string('connector_sftp:path_example', 'tool_dataflows')
                     )
             );
         }
@@ -187,7 +187,7 @@ trait sftp_trait {
         }
 
         // Copy step checks.
-        if ($behaviour === 'copy') {
+        if ($behaviour === 'copy' || $behaviour === 'rename') {
             if (empty($config->source)) {
                 $errors['config_source'] = get_string(
                     'config_field_missing',
@@ -205,20 +205,9 @@ trait sftp_trait {
                 );
             }
         }
-        // Delete step checks.
-        if ($behaviour === 'delete') {
-            if (empty($config->source)) {
-                $errors['config_source'] = get_string(
-                        'config_field_missing',
-                        'tool_dataflows',
-                        get_string('connector_sftp:source', 'tool_dataflows'),
-                        true
-                );
-            }
-        }
 
         $hasremote = true;
-        // Check that at least one file config has an sftp:// scheme.
+        // Check that at both config has an sftp:// scheme.
         if ($behaviour === 'delete') {
             if (!empty($config->source)) {
                 // Check if the source or target is an expression, and evaluate it if required.
@@ -226,8 +215,20 @@ trait sftp_trait {
                 $hasremote = $sourceremote;
             }
             if (!$hasremote) {
-                $errormsg = get_string('connector_sftp:missing_remote', 'tool_dataflows', null, true);
+                $errormsg = get_string('connector_sftp:delete_missing_remote', 'tool_dataflows', null, true);
                 $errors['config_source'] = $errors['config_source'] ?? $errormsg;
+            }
+        } else if ($behaviour === 'rename') {
+            if (!empty($config->source) && !empty($config->target)) {
+                // Check if the source or target is an expression, and evaluate it if required.
+                $sourceremote = helper::path_has_scheme($config->source, self::$sftpprefix);
+                $targetremote = helper::path_has_scheme($config->target, self::$sftpprefix);
+                $hasremote = $sourceremote && $targetremote;
+            }
+            if (!$hasremote) {
+                $errormsg = get_string('connector_sftp:rename_missing_remote', 'tool_dataflows', null, true);
+                $errors['config_source'] = $errors['config_source'] ?? $errormsg;
+                $errors['config_target'] = $errors['config_target'] ?? $errormsg;
             }
         } else {
             if (!empty($config->source) && !empty($config->target)) {
@@ -257,7 +258,7 @@ trait sftp_trait {
 
         $errors = [];
 
-        if ($behaviour === 'copy') {
+        if ($behaviour === 'copy' || $behaviour === 'rename') {
             $error = helper::path_validate($config->source);
             if ($error !== true) {
                 $errors['config_source'] = $error;
@@ -444,15 +445,29 @@ trait sftp_trait {
     }
 
     /**
-     * Delete a file from one remote source
+     * Delete a file in one remote source
      *
      * @param SFTP $sftp
      * @param string $sourcepath
      */
     private function delete_from_remote(SFTP $sftp, string $sourcepath) {
         $this->log("Deleting from '$sourcepath'");
-        if (!$sftp->delete($sourcepath, false)) {
+        if (!$sftp->delete($sourcepath)) {
             throw new \moodle_exception('connector_sftp:delete_fail', 'tool_dataflows', '', $sftp->getLastSFTPError());
+        }
+    }
+
+    /**
+     * Rename a file in one remote source
+     *
+     * @param SFTP $sftp
+     * @param string $sourcepath
+     * @param string $targetpath
+     */
+    private function rename_from_remote(SFTP $sftp, string $sourcepath, string $targetpath) {
+        $this->log("Renaming from '$sourcepath' to '$targetpath'");
+        if (!$sftp->rename($sourcepath, $targetpath)) {
+            throw new \moodle_exception('connector_sftp:rename_fail', 'tool_dataflows', '', $sftp->getLastSFTPError());
         }
     }
 
