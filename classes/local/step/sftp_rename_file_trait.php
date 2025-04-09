@@ -84,7 +84,7 @@ trait sftp_rename_file_trait {
                 $this->rename_from_remote($sftp, $sourcepath, $targetpath);
                 return $input;
             }
-            throw new \moodle_exception('connector_sftp:source_not_remote', 'tool_dataflows');
+            throw new \moodle_exception('connector_sftp:rename_missing_remote', 'tool_dataflows');
         } catch (\Throwable $e) {
             $this->enginestep->log->error($e->getMessage());
             if (isset($sftp)) {

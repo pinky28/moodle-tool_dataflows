@@ -84,7 +84,7 @@ trait sftp_delete_file_trait {
                 $this->delete_from_remote($sftp, $sourcepath);
                 return $input;
             }
-            throw new \moodle_exception('connector_sftp:source_not_remote', 'tool_dataflows');
+            throw new \moodle_exception('connector_sftp:delete_missing_remote', 'tool_dataflows');
         } catch (\Throwable $e) {
             $this->enginestep->log->error($e->getMessage());
             if (isset($sftp)) {
